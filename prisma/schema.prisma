@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+
+  assignedTasks   Task[]    @relation("AssignedTo")
+  assignedByTasks Task[]    @relation("AssignedBy")
+  sentMessages    Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @default("")
+  status      String   @default("pending")
+  priority    String   @default("medium")
+  dueDate     String
+  userNote    String?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assignedTo   User   @relation("AssignedTo", fields: [assignedToId], references: [id])
+  assignedToId String
+
+  assignedBy   User   @relation("AssignedBy", fields: [assignedById], references: [id])
+  assignedById String
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  subject   String
+  body      String
+  read      Boolean  @default(false)
+  taskId    String?
+  createdAt DateTime @default(now())
+
+  from   User   @relation("SentMessages", fields: [fromId], references: [id])
+  fromId String
+
+  to   User   @relation("ReceivedMessages", fields: [toId], references: [id])
+  toId String
+}
